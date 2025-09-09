@@ -9,14 +9,23 @@ export default function AuthGuard({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token && pathname !== "/login") {
+
+    // ✅ Allow login and register pages without token
+    const publicPaths = ["/login", "/register"];
+
+    if (!token && !publicPaths.includes(pathname)) {
       router.push("/login");
     }
-    setChecked(true); 
+
+    setChecked(true);
   }, [pathname, router]);
 
   if (!checked) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return children;

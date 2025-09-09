@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [funnyTrigger, setFunnyTrigger] = useState(0);
   const [success, setSuccess] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // 👈 NEW state
+  const [showPassword, setShowPassword] = useState(false); 
 
   const handleLogin = async (e) => {
     e.preventDefault();

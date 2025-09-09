@@ -13,26 +13,30 @@ export default function TicketForm({ onCreated }) {
     description: "",
     priority: "medium",
     category: "general",
-    assignedTo: "", // 👈 new field
+    assignedTo: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState([]); // 👈 list of users
+  const [users, setUsers] = useState([]);
 
   const fetchNotifications = useNotificationStore((s) => s.fetchNotifications);
 
-  // fetch users on mount
+  const currentUser = typeof window !== "undefined"
+    ? JSON.parse(localStorage.getItem("user") || "{}")
+    : {};
+
   useEffect(() => {
     async function fetchUsers() {
       try {
         const data = await apiRequest("/users", "GET");
-        setUsers(data);
+        const filtered = data.filter((u) => u._id !== currentUser._id);
+        setUsers(filtered);
       } catch (err) {
         console.error("❌ Error fetching users:", err.message);
       }
     }
     fetchUsers();
-  }, []);
+  }, [currentUser._id]);
 
   const handleChange = (e) => {
     setError("");
