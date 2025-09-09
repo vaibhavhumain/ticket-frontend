@@ -1,20 +1,23 @@
 "use client";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function AuthGuard({ children }) {
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login"); // not logged in
-    } else {
-      setLoading(false); // logged in
+    if (!token && pathname !== "/login") {
+      router.push("/login");
     }
-  }, [router]);
+    setChecked(true); 
+  }, [pathname, router]);
 
-  if (loading) return <p>Loading...</p>;
+  if (!checked) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
   return children;
 }
