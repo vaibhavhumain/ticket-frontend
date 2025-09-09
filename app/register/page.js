@@ -21,7 +21,7 @@ export default function RegisterPage() {
 
     try {
       const res = await fetch(
-        "https://ticket-backend-cbgp.onrender.com/api/auth/register",
+        "https://ticket-backend-1-2je9.onrender.com/api/auth/register",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

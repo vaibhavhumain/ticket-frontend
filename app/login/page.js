@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
-import loadingAnim from "@/animations/loading.json"; 
+import loadingAnim from "@/animations/loading.json";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,15 +18,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [funnyTrigger, setFunnyTrigger] = useState(0);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // 👈 NEW state
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+    setFunnyTrigger((prev) => prev + 1);
 
     try {
       const res = await fetch(
-        "https://ticket-backend-cbgp.onrender.com/api/auth/login",
+        "https://ticket-backend-1-2je9.onrender.com/api/auth/login",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -40,14 +42,12 @@ export default function LoginPage() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      // ✅ Show loading animation for 2 seconds then redirect
       setSuccess(true);
       setTimeout(() => {
         router.push("/dashboard");
       }, 2000);
     } catch (err) {
       setError(err.message);
-      setFunnyTrigger((prev) => prev + 1); // trigger funny animation
       setLoading(false);
     }
   };
@@ -65,26 +65,16 @@ export default function LoginPage() {
             <CardTitle className="text-2xl font-bold text-slate-700">
               Login
             </CardTitle>
-
-            {/* Funny Animal Emoji when error */}
-            {error && (
-              <motion.div
-                key={funnyTrigger}
-                initial={{ y: -10 }}
-                animate={{ y: [0, -10, 0, -10, 0] }}
-                transition={{ duration: 0.6, repeat: 2 }}
-                className="text-6xl mt-2"
-              >
-                🐵
-              </motion.div>
-            )}
           </CardHeader>
 
           <CardContent>
             {success ? (
-              // ✅ Success loading animation
               <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                <Lottie animationData={loadingAnim} loop={true} className="w-32 h-32" />
+                <Lottie
+                  animationData={loadingAnim}
+                  loop={true}
+                  className="w-32 h-32"
+                />
                 <p className="text-slate-600 font-medium">Logging you in...</p>
               </div>
             ) : (
@@ -105,16 +95,27 @@ export default function LoginPage() {
                   />
                 </div>
 
+                {/* 👇 Password with show/hide button */}
                 <div className="flex flex-col space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="pr-20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-2 flex items-center text-sm text-slate-600 hover:text-slate-800"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
                 </div>
 
                 <motion.div

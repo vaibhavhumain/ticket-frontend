@@ -31,7 +31,6 @@ export default function LogoutPage() {
 
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold text-slate-800">Logging you out...</h1>
-        <p className="text-slate-600">The dog is walking you out 🐾</p>
       </div>
     </main>
   );
