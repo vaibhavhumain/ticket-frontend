@@ -2,14 +2,28 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import TicketForm from "@/components/TicketForm"; // 👈 import your form
+import TicketForm from "@/components/TicketForm"; 
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
+const { reset } = useNotificationStore.getState();
 
 export default function MainPage() {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [showForm, setShowForm] = useState(false); // 👈 modal state
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("❌ Failed to parse user from localStorage:", e);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
     setLoggingOut(true);
@@ -17,6 +31,7 @@ export default function MainPage() {
     setTimeout(() => {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      reset();
       router.push("/logout");
     }, 1500);
   };
@@ -41,6 +56,11 @@ export default function MainPage() {
               <p className="text-slate-600">
                 Manage, Track & Resolve Queries Easily
               </p>
+              {user && (
+                <p className="mt-2 text-slate-700 font-medium">
+                  👋 Welcome, <span className="font-bold">{user.name || user.email}</span>
+                </p>
+              )}
             </div>
 
             {/* Options */}

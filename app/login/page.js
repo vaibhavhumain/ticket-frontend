@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
 import loadingAnim from "@/animations/loading.json";
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
+const { rehydrate } = useNotificationStore.getState();
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    rehydrate();
     setFunnyTrigger((prev) => prev + 1);
 
     try {

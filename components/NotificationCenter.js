@@ -4,23 +4,59 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNotificationStore } from "@/lib/store";
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
+import { io } from "socket.io-client";
 
 export default function NotificationCenter() {
-  const { notifications, fetchNotifications, markAsRead } = useNotificationStore();
+  const {
+    notifications,
+    fetchNotifications,
+    markAsRead,
+    addNotification,
+  } = useNotificationStore();
+
   const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
-  // 👇 fetch notifications from backend on mount
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+
+    // if no token → don’t mount anything
+    if (!storedUser || !token) {
+      setIsLoggedIn(false);
+      return;
+    }
+    setIsLoggedIn(true);
+
     fetchNotifications();
-  }, [fetchNotifications]);
+
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
+      withCredentials: true,
+    });
+
+    const user = JSON.parse(storedUser);
+    if (user?._id) {
+      socket.emit("join", user._id);
+    }
+
+    socket.on("notification", (notif) => {
+      console.log("📩 New notification:", notif);
+      addNotification(notif);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [fetchNotifications, addNotification]);
+
+  if (!isLoggedIn) return null; // 👈 don’t render anything after logout
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="absolute top-4 right-4 z-50">
-      {/* Bell button */}
       <button
         onClick={() => setOpen(!open)}
         className="relative p-2 bg-white rounded-full shadow hover:bg-slate-100"
@@ -33,7 +69,6 @@ export default function NotificationCenter() {
         )}
       </button>
 
-      {/* Dropdown notifications */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -48,8 +83,8 @@ export default function NotificationCenter() {
             )}
 
             {notifications.map((n) => {
-              // 👇 handle case where ticket is populated (object) or just an ID
-              const ticketId = typeof n.ticket === "object" ? n.ticket._id : n.ticket;
+              const ticketId =
+                typeof n.ticket === "object" ? n.ticket._id : n.ticket;
 
               return (
                 <div
@@ -60,16 +95,18 @@ export default function NotificationCenter() {
                       router.push(`/tickets/${ticketId}`);
                     }
                   }}
-                  className={`p-2 rounded cursor-pointer ${
+                  className={`p-2 rounded cursor-pointer flex justify-between items-start ${
                     n.read ? "bg-slate-100" : "bg-blue-50"
                   } hover:bg-blue-100`}
                 >
-                  <p className="text-sm font-medium">{n.title}</p>
-                  {typeof n.ticket === "object" && (
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {n.ticket.title}
-                    </p>
-                  )}
+                  <div>
+                    <p className="text-sm font-medium">{n.title}</p>
+                    {typeof n.ticket === "object" && (
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {n.ticket.title}
+                      </p>
+                    )}
+                  </div>
                 </div>
               );
             })}

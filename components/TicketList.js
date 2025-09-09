@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function TicketList() {
-  const [tickets, setTickets] = useState([]);
+  const [tickets, setTickets] = useState({ raisedByMe: [], assignedToMe: [] });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +34,9 @@ export default function TicketList() {
 
   if (error) return <p className="text-red-500">{error}</p>;
 
-  if (tickets.length === 0)
+  const { raisedByMe = [], assignedToMe = [] } = tickets;
+
+  if (raisedByMe.length === 0 && assignedToMe.length === 0)
     return (
       <div className="text-center text-gray-500 p-6 border rounded bg-white shadow">
         No tickets found.
@@ -42,71 +44,99 @@ export default function TicketList() {
     );
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {tickets.map((t) => (
-        <div
-          key={t._id}
-          className="p-5 border rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow duration-200"
+    <div className="space-y-8">
+      {/* Raised by me */}
+      <section>
+        <h2 className="text-lg font-bold text-slate-800 mb-3">
+          📌 Tickets Raised By Me
+        </h2>
+        {raisedByMe.length === 0 ? (
+          <p className="text-sm text-gray-500">No tickets raised.</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {raisedByMe.map((t) => (
+              <TicketCard key={t._id} ticket={t} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Assigned to me */}
+      <section>
+        <h2 className="text-lg font-bold text-slate-800 mb-3">
+          📝 Tickets Assigned To Me
+        </h2>
+        {assignedToMe.length === 0 ? (
+          <p className="text-sm text-gray-500">No tickets assigned.</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {assignedToMe.map((t) => (
+              <TicketCard key={t._id} ticket={t} />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function TicketCard({ ticket: t }) {
+  return (
+    <div className="p-5 border rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-bold text-lg text-slate-800 truncate">{t.title}</h3>
+        <Badge
+          variant={
+            t.priority === "high"
+              ? "destructive"
+              : t.priority === "medium"
+              ? "default"
+              : "secondary"
+          }
         >
-          {/* Header */}
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-bold text-lg text-slate-800 truncate">
-              {t.title}
-            </h3>
-            <Badge
-              variant={
-                t.priority === "high"
-                  ? "destructive"
-                  : t.priority === "medium"
-                  ? "default"
-                  : "secondary"
-              }
-            >
-              {t.priority}
-            </Badge>
-          </div>
+          {t.priority}
+        </Badge>
+      </div>
 
-          {/* Description */}
-          <p className="text-slate-600 text-sm line-clamp-3 mb-3">
-            {t.description}
-          </p>
+      {/* Description */}
+      <p className="text-slate-600 text-sm line-clamp-3 mb-3">{t.description}</p>
 
-          {/* Footer */}
-          <div className="flex justify-between items-center text-xs text-gray-500">
-            <span>
-              Status:{" "}
-              <span
-                className={`font-medium ${
-                  t.status === "open"
-                    ? "text-green-600"
-                    : t.status === "closed"
-                    ? "text-red-600"
-                    : "text-yellow-600"
-                }`}
-              >
-                {t.status}
-              </span>
-            </span>
-            <span>
-              {t.createdAt
-                ? new Date(t.createdAt).toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : ""}
-            </span>
-          </div>
-          {t.createdBy && (
-            <p className="mt-2 text-xs text-gray-600">
-              Raised by:{" "}
-              <span className="font-medium text-slate-800">
-                {t.createdBy.name || t.createdBy.email}
-              </span>
-            </p>
-          )}
-        </div>
-      ))}
+      {/* Footer */}
+      <div className="flex justify-between items-center text-xs text-gray-500">
+        <span>
+          Status:{" "}
+          <span
+            className={`font-medium ${
+              t.status === "open"
+                ? "text-green-600"
+                : t.status === "closed"
+                ? "text-red-600"
+                : "text-yellow-600"
+            }`}
+          >
+            {t.status}
+          </span>
+        </span>
+        <span>
+          {t.createdAt
+            ? new Date(t.createdAt).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+            : ""}
+        </span>
+      </div>
+
+      {t.createdBy && (
+        <p className="mt-2 text-xs text-gray-600">
+          Raised by:{" "}
+          <span className="font-medium text-slate-800">
+            {t.createdBy.name || t.createdBy.email}
+          </span>
+        </p>
+      )}
     </div>
   );
 }
