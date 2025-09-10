@@ -20,6 +20,9 @@ export default function TicketDetailPage() {
   const [newComment, setNewComment] = useState("");
   const [newStatus, setNewStatus] = useState("");
 
+  const cardClass =
+    "rounded-xl bg-white shadow-lg border border-gray-100 p-6 space-y-4";
+
   // Fetch ticket initially
   useEffect(() => {
     async function fetchTicket() {
@@ -58,7 +61,7 @@ export default function TicketDetailPage() {
     socket.on("ticketDeleted", ({ id: deletedId }) => {
       if (deletedId === id) {
         alert("This ticket was deleted.");
-        router.push("/dashboard"); // redirect back
+        router.push("/dashboard");
       }
     });
 
@@ -74,7 +77,7 @@ export default function TicketDetailPage() {
         text: newComment,
         status: newStatus,
       });
-      setTicket(updated); // immediate optimistic update
+      setTicket(updated);
       setNewComment("");
     } catch (err) {
       alert(err.message);
@@ -93,9 +96,9 @@ export default function TicketDetailPage() {
   if (!ticket) return <p className="p-6">No ticket found.</p>;
 
   return (
-    <main className="p-6 max-w-2xl mx-auto space-y-6">
+    <main className="p-6 max-w-3xl mx-auto space-y-8 bg-gradient-to-b from-slate-50 to-slate-100 min-h-screen">
       {/* Header */}
-      <div className="flex items-center mb-6">
+      <div className="flex items-center">
         <button
           onClick={() => router.back()}
           className="flex items-center text-blue-600 hover:underline"
@@ -105,9 +108,11 @@ export default function TicketDetailPage() {
       </div>
 
       {/* Ticket Info */}
-      <div className="border rounded-xl bg-white shadow-md p-6 space-y-4">
+      <div className={cardClass}>
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-slate-800">{ticket.title}</h1>
+          <h1 className="text-3xl font-extrabold text-slate-800">
+            {ticket.title}
+          </h1>
           <Badge
             variant={
               ticket.priority === "high"
@@ -116,6 +121,7 @@ export default function TicketDetailPage() {
                 ? "default"
                 : "secondary"
             }
+            className="capitalize px-3 py-1 text-sm"
           >
             {ticket.priority}
           </Badge>
@@ -123,7 +129,7 @@ export default function TicketDetailPage() {
 
         <p className="text-slate-600">{ticket.description}</p>
 
-        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+        <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
           <p>
             <span className="font-semibold">Status:</span>{" "}
             <span className="capitalize">{ticket.status}</span>
@@ -145,48 +151,49 @@ export default function TicketDetailPage() {
       </div>
 
       {/* Update Ticket */}
-      <div className="border rounded-xl bg-white shadow-md p-6 space-y-4 overflow-visible">
-        <h2 className="font-semibold text-lg">Update Ticket</h2>
+      <div className={cardClass}>
+        <h2 className="font-semibold text-lg text-slate-700">Update Ticket</h2>
 
-        {/* Status Dropdown */}
-        <div className="space-y-2 mb-8 relative z-50">
-          <label className="text-sm font-medium text-gray-700">
-            Change Status
-          </label>
-          <select
-            value={newStatus}
-            onChange={(e) => setNewStatus(e.target.value)} // ✅ fixed
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="open">Open</option>
-            <option value="in-progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
-          </select>
+        <div className="grid gap-4">
+          {/* Status Dropdown */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Change Status
+            </label>
+            <select
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value)}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="open">Open</option>
+              <option value="in-progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          {/* Comment Box */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Optional Comment
+            </label>
+            <Textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add details about this update..."
+              className="resize-none min-h-[80px]"
+            />
+          </div>
         </div>
 
-        {/* Comment Box */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            Optional Comment
-          </label>
-          <Textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Add details about this update..."
-            className="resize-none min-h-[80px]"
-          />
-        </div>
-
-        {/* Save Button */}
         <Button onClick={handleAddComment} className="w-full">
           Save Update
         </Button>
       </div>
 
       {/* Comments */}
-      <div className="border rounded-xl bg-white shadow-md p-6 space-y-4">
-        <h2 className="font-semibold text-lg">Comments</h2>
+      <div className={cardClass}>
+        <h2 className="font-semibold text-lg text-slate-700">Comments</h2>
         {ticket.comments?.length > 0 ? (
           <ul className="space-y-3">
             {ticket.comments.map((c, i) => (
