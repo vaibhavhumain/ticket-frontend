@@ -3,7 +3,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import AuthGuard from "@/components/Authguard"; 
 import NotificationCenter from "@/components/NotificationCenter"; // 👈 import
-
+import Navbar  from "@/components/Navbar";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -27,14 +27,13 @@ export default function RootLayout({ children }) {
       >
         <AuthGuard>
           {/* 👇 Global notification bell inside AuthGuard */}
-          <NotificationCenter />
 
           {/* Page content */}
           {children}
         </AuthGuard>
 
         {/* Global toast renderer */}
-        <Toaster />
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

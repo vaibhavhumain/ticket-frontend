@@ -4,12 +4,16 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import io from "socket.io-client";
+
+let socket;
 
 export default function TicketList() {
   const [tickets, setTickets] = useState({ raisedByMe: [], assignedToMe: [] });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Fetch tickets initially
   useEffect(() => {
     async function fetchTickets() {
       try {
@@ -22,6 +26,63 @@ export default function TicketList() {
       }
     }
     fetchTickets();
+  }, []);
+
+  // Connect to Socket.IO
+  useEffect(() => {
+    socket = io(process.env.NEXT_PUBLIC_API_URL, {
+      transports: ["websocket"],
+    });
+
+    socket.on("connect", () => {
+      console.log("🟢 Connected to socket:", socket.id);
+    });
+
+    // When new ticket created
+    socket.on("ticketCreated", (newTicket) => {
+      setTickets((prev) => {
+        // If raised by me
+        if (newTicket.createdBy?._id === getUserId()) {
+          return {
+            ...prev,
+            raisedByMe: [newTicket, ...prev.raisedByMe],
+          };
+        }
+        // If assigned to me
+        if (newTicket.assignedTo?._id === getUserId()) {
+          return {
+            ...prev,
+            assignedToMe: [newTicket, ...prev.assignedToMe],
+          };
+        }
+        return prev;
+      });
+    });
+
+    // When ticket updated
+    socket.on("ticketUpdated", (updatedTicket) => {
+      setTickets((prev) => {
+        const updateList = (list) =>
+          list.map((t) => (t._id === updatedTicket._id ? updatedTicket : t));
+
+        return {
+          raisedByMe: updateList(prev.raisedByMe),
+          assignedToMe: updateList(prev.assignedToMe),
+        };
+      });
+    });
+
+    // When ticket deleted
+    socket.on("ticketDeleted", ({ id }) => {
+      setTickets((prev) => ({
+        raisedByMe: prev.raisedByMe.filter((t) => t._id !== id),
+        assignedToMe: prev.assignedToMe.filter((t) => t._id !== id),
+      }));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   if (loading)
@@ -78,6 +139,15 @@ export default function TicketList() {
       </section>
     </div>
   );
+}
+
+// Helper: get logged-in user id from localStorage
+function getUserId() {
+  if (typeof window !== "undefined") {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    return user?._id || user?.id || null;
+  }
+  return null;
 }
 
 function TicketCard({ ticket: t }) {

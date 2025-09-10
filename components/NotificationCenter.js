@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNotificationStore } from "@/lib/store/useNotificationStore";
 import { io } from "socket.io-client";
 
+let socket;
+
 export default function NotificationCenter() {
   const {
     notifications,
@@ -16,24 +18,19 @@ export default function NotificationCenter() {
   } = useNotificationStore();
 
   const [open, setOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
 
-    // if no token → don’t mount anything
-    if (!storedUser || !token) {
-      setIsLoggedIn(false);
-      return;
-    }
-    setIsLoggedIn(true);
+    if (!storedUser || !token) return; // not logged in → skip
 
     fetchNotifications();
 
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
+    socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
       withCredentials: true,
+      transports: ["websocket"],
     });
 
     const user = JSON.parse(storedUser);
@@ -47,16 +44,15 @@ export default function NotificationCenter() {
     });
 
     return () => {
-      socket.disconnect();
+      if (socket) socket.disconnect();
     };
   }, [fetchNotifications, addNotification]);
-
-  if (!isLoggedIn) return null; // 👈 don’t render anything after logout
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="absolute top-4 right-4 z-50">
+      {/* Bell */}
       <button
         onClick={() => setOpen(!open)}
         className="relative p-2 bg-white rounded-full shadow hover:bg-slate-100"
@@ -69,6 +65,7 @@ export default function NotificationCenter() {
         )}
       </button>
 
+      {/* Dropdown */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -79,7 +76,9 @@ export default function NotificationCenter() {
             className="absolute right-0 mt-2 w-80 bg-white shadow-xl rounded-lg p-4 max-h-96 overflow-y-auto space-y-2"
           >
             {notifications.length === 0 && (
-              <p className="text-sm text-slate-500">No notifications</p>
+              <p className="text-sm text-center text-slate-500 py-4">
+                🎉 You’re all caught up!
+              </p>
             )}
 
             {notifications.map((n) => {
@@ -93,20 +92,20 @@ export default function NotificationCenter() {
                     markAsRead(n._id);
                     if (ticketId) {
                       router.push(`/tickets/${ticketId}`);
+                      setOpen(false);
                     }
                   }}
-                  className={`p-2 rounded cursor-pointer flex justify-between items-start ${
+                  className={`p-2 rounded cursor-pointer ${
                     n.read ? "bg-slate-100" : "bg-blue-50"
-                  } hover:bg-blue-100`}
+                  } hover:bg-blue-100 transition`}
                 >
-                  <div>
-                    <p className="text-sm font-medium">{n.title}</p>
-                    {typeof n.ticket === "object" && (
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {n.ticket.title}
-                      </p>
-                    )}
-                  </div>
+                  <p className="text-sm font-medium">{n.title}</p>
+                  {typeof n.ticket === "object" && (
+                    <p className="text-xs text-slate-500">{n.ticket.title}</p>
+                  )}
+                  <span className="block text-xs text-gray-400 mt-0.5">
+                    {new Date(n.createdAt).toLocaleString()}
+                  </span>
                 </div>
               );
             })}

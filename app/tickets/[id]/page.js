@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, ArrowLeft } from "lucide-react";
+import io from "socket.io-client";
+
+let socket;
 
 export default function TicketDetailPage() {
   const { id } = useParams();
@@ -17,6 +20,7 @@ export default function TicketDetailPage() {
   const [newComment, setNewComment] = useState("");
   const [newStatus, setNewStatus] = useState("");
 
+  // Fetch ticket initially
   useEffect(() => {
     async function fetchTicket() {
       try {
@@ -32,6 +36,37 @@ export default function TicketDetailPage() {
     if (id) fetchTicket();
   }, [id]);
 
+  // Setup socket.io for real-time updates
+  useEffect(() => {
+    if (!id) return;
+
+    socket = io(process.env.NEXT_PUBLIC_API_URL, {
+      transports: ["websocket"],
+    });
+
+    socket.on("connect", () => {
+      console.log("🟢 Connected to socket:", socket.id);
+    });
+
+    socket.on("ticketUpdated", (updatedTicket) => {
+      if (updatedTicket._id === id) {
+        setTicket(updatedTicket);
+        setNewStatus(updatedTicket.status);
+      }
+    });
+
+    socket.on("ticketDeleted", ({ id: deletedId }) => {
+      if (deletedId === id) {
+        alert("This ticket was deleted.");
+        router.push("/dashboard"); // redirect back
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [id, router]);
+
   async function handleAddComment() {
     if (!newComment && !newStatus) return;
     try {
@@ -39,7 +74,7 @@ export default function TicketDetailPage() {
         text: newComment,
         status: newStatus,
       });
-      setTicket(updated);
+      setTicket(updated); // immediate optimistic update
       setNewComment("");
     } catch (err) {
       alert(err.message);
@@ -55,7 +90,6 @@ export default function TicketDetailPage() {
     );
 
   if (error) return <p className="p-6 text-red-500">{error}</p>;
-
   if (!ticket) return <p className="p-6">No ticket found.</p>;
 
   return (
@@ -119,11 +153,15 @@ export default function TicketDetailPage() {
           <label className="text-sm font-medium text-gray-700">
             Change Status
           </label>
-          <select value={newStatus} onValueChange={(e) => setNewStatus(e.target.value)} className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
-              <option value="open">Open</option>
-              <option value="in-progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
+          <select
+            value={newStatus}
+            onChange={(e) => setNewStatus(e.target.value)} // ✅ fixed
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
           </select>
         </div>
 

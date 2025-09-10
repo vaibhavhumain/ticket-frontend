@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import Lottie from "lottie-react";
 import loadingAnim from "@/animations/loading.json";
 import { useNotificationStore } from "@/lib/store/useNotificationStore";
@@ -18,16 +17,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [funnyTrigger, setFunnyTrigger] = useState(0);
   const [success, setSuccess] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     rehydrate();
-    setFunnyTrigger((prev) => prev + 1);
 
     try {
       const res = await fetch(
@@ -46,9 +43,14 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(data.user));
 
       setSuccess(true);
+
       setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
+        if (data.user.role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
+      }, 1500);
     } catch (err) {
       setError(err.message);
       setLoading(false);
@@ -57,94 +59,83 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300">
-      <motion.div
-        key={funnyTrigger}
-        initial={{ rotate: 0 }}
-        animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
-        transition={{ duration: 0.6 }}
-      >
-        <Card className="w-[400px] p-6 shadow-2xl rounded-xl backdrop-blur-md bg-white/80">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-slate-700">
-              Login
-            </CardTitle>
-          </CardHeader>
+      <Card className="w-[400px] p-6 shadow-2xl rounded-xl backdrop-blur-md bg-white/80">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-slate-700">
+            Login
+          </CardTitle>
+        </CardHeader>
 
-          <CardContent>
-            {success ? (
-              <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                <Lottie
-                  animationData={loadingAnim}
-                  loop={true}
-                  className="w-32 h-32"
+        <CardContent>
+          {success ? (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <Lottie
+                animationData={loadingAnim}
+                loop={true}
+                className="w-32 h-32"
+              />
+              <p className="text-slate-600 font-medium">Logging you in...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleLogin} className="flex flex-col space-y-4">
+              {error && (
+                <p className="text-red-500 text-sm text-center">{error}</p>
+              )}
+
+              {/* Email */}
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
-                <p className="text-slate-600 font-medium">Logging you in...</p>
               </div>
-            ) : (
-              <form onSubmit={handleLogin} className="flex flex-col space-y-4">
-                {error && (
-                  <p className="text-red-500 text-sm text-center">{error}</p>
-                )}
 
-                <div className="flex flex-col space-y-2">
-                  <Label htmlFor="email">Email</Label>
+              {/* Password */}
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="pr-20"
                   />
-                </div>
-
-                {/* 👇 Password with show/hide button */}
-                <div className="flex flex-col space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="pr-20"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-2 flex items-center text-sm text-slate-600 hover:text-slate-800"
-                    >
-                      {showPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                </div>
-
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full"
-                >
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Checking..." : "Login"}
-                  </Button>
-                </motion.div>
-
-                <p className="text-sm text-center text-slate-500">
-                  Don’t have an account?{" "}
-                  <a
-                    href="/register"
-                    className="text-slate-700 font-medium underline"
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-2 flex items-center text-sm text-slate-600 hover:text-slate-800"
                   >
-                    Register
-                  </a>
-                </p>
-              </form>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Checking..." : "Login"}
+              </Button>
+
+              <p className="text-sm text-center text-slate-500">
+                Don’t have an account?{" "}
+                <a
+                  href="/register"
+                  className="text-slate-700 font-medium underline"
+                >
+                  Register
+                </a>
+              </p>
+            </form>
+          )}
+        </CardContent>
+      </Card>
     </main>
   );
 }
