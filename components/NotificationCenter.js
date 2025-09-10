@@ -55,7 +55,7 @@ export default function NotificationCenter() {
       {/* Bell */}
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 bg-white rounded-full shadow hover:bg-slate-100"
+        className="relative p-2 bg-white rounded-full shadow hover:bg-slate-100 transition"
       >
         <Bell className="h-6 w-6 text-slate-700" />
         {unreadCount > 0 && (
@@ -73,42 +73,58 @@ export default function NotificationCenter() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-80 bg-white shadow-xl rounded-lg p-4 max-h-96 overflow-y-auto space-y-2"
+            className="absolute right-0 mt-2 w-96 bg-white shadow-2xl rounded-lg overflow-hidden"
           >
-            {notifications.length === 0 && (
-              <p className="text-sm text-center text-slate-500 py-4">
-                🎉 You’re all caught up!
-              </p>
-            )}
+            <div className="p-4 border-b font-semibold text-slate-700">
+              Notifications
+            </div>
 
-            {notifications.map((n) => {
-              const ticketId =
-                typeof n.ticket === "object" ? n.ticket._id : n.ticket;
+            <div className="max-h-96 overflow-y-auto divide-y">
+              {notifications.length === 0 && (
+                <p className="text-sm text-center text-slate-500 py-6">
+                  🎉 You’re all caught up!
+                </p>
+              )}
 
-              return (
-                <div
-                  key={n._id}
-                  onClick={() => {
-                    markAsRead(n._id);
-                    if (ticketId) {
-                      router.push(`/tickets/${ticketId}`);
-                      setOpen(false);
-                    }
-                  }}
-                  className={`p-2 rounded cursor-pointer ${
-                    n.read ? "bg-slate-100" : "bg-blue-50"
-                  } hover:bg-blue-100 transition`}
-                >
-                  <p className="text-sm font-medium">{n.title}</p>
-                  {typeof n.ticket === "object" && (
-                    <p className="text-xs text-slate-500">{n.ticket.title}</p>
-                  )}
-                  <span className="block text-xs text-gray-400 mt-0.5">
-                    {new Date(n.createdAt).toLocaleString()}
-                  </span>
-                </div>
-              );
-            })}
+              {notifications.map((n) => {
+                const ticketId =
+                  typeof n.ticket === "object" ? n.ticket._id : n.ticket;
+
+                return (
+                  <div
+                    key={n._id}
+                    onClick={() => {
+                      markAsRead(n._id);
+                      if (ticketId) {
+                        router.push(`/tickets/${ticketId}`);
+                        setOpen(false);
+                      }
+                    }}
+                    className={`p-3 cursor-pointer transition ${
+                      n.read
+                        ? "bg-white hover:bg-slate-100 text-slate-600"
+                        : "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
+                    }`}
+                  >
+                    <p
+                      className={`text-sm ${
+                        n.read ? "font-normal" : "font-semibold text-slate-800"
+                      }`}
+                    >
+                      {n.title}
+                    </p>
+                    {typeof n.ticket === "object" && (
+                      <p className="text-xs text-slate-500 truncate">
+                        {n.ticket.title}
+                      </p>
+                    )}
+                    <span className="block text-xs text-gray-400 mt-1">
+                      {new Date(n.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

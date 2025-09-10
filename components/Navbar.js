@@ -11,6 +11,8 @@ export default function Navbar() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -27,16 +29,14 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="w-full bg-white shadow-md flex items-center justify-between px-8 py-3 sticky top-0 z-50">
+      <nav className="w-full bg-white shadow-md flex items-center justify-between px-6 py-3 sticky top-0 z-50">
         {/* Left: Logo */}
         <Link href="/dashboard" className="flex items-center space-x-2">
           <span className="text-pink-600 text-2xl">🎟️</span>
-          <span className="text-lg font-bold text-slate-800">
-            Ticket System
-          </span>
+          <span className="text-lg font-bold text-slate-800">Ticket System</span>
         </Link>
 
-        {/* Center: Links */}
+        {/* Desktop Links */}
         <div className="hidden md:flex items-center space-x-6">
           <Link
             href="/dashboard"
@@ -50,47 +50,53 @@ export default function Navbar() {
           >
             Tickets
           </Link>
-          {/* 👇 Reports only for admin */}
           {role === "admin" && (
-            <Link
-              href="/reports"
-              className="text-slate-700 hover:text-blue-600 font-medium"
-            >
-              Reports
-            </Link>
+            <>
+              <Link
+                href="/reports"
+                className="text-slate-700 hover:text-blue-600 font-medium"
+              >
+                Reports
+              </Link>
+              <Link
+                href="/admin"
+                className="text-slate-700 hover:text-blue-600 font-medium"
+              >
+                Admin
+              </Link>
+            </>
           )}
-          {/* 👇 Raise ticket only for employee + developer */}
           {(role === "employee" || role === "developer") && (
-            <button
-              onClick={() => setShowForm(true)}
-              
-            >
-                Raise Ticket
-            </button>
+            <Button onClick={() => setShowForm(true)}>Raise Ticket</Button>
           )}
         </div>
 
         {/* Right: User Dropdown */}
-        <div className="flex items-center space-x-4">
+        <div className="hidden md:flex items-center space-x-4">
           {user ? (
-            <div className="relative group">
-              <button className="px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 font-medium hover:bg-slate-200">
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 font-medium hover:bg-slate-200"
+              >
                 {user.name?.split(" ")[0] || user.email}
               </button>
-              <div className="absolute right-0 mt-2 hidden group-hover:block bg-white border rounded shadow-lg w-40">
-                <Link
-                  href="/profile"
-                  className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                >
-                  Profile
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-slate-100"
-                >
-                  Logout
-                </button>
-              </div>
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg w-40">
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-slate-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <Link
@@ -103,7 +109,90 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* 👇 Raise Ticket Modal */}
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            className="md:hidden bg-white shadow-md flex flex-col px-6 py-4 space-y-3"
+          >
+            <Link
+              href="/dashboard"
+              onClick={() => setMenuOpen(false)}
+              className="text-slate-700 hover:text-blue-600 font-medium"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/tickets"
+              onClick={() => setMenuOpen(false)}
+              className="text-slate-700 hover:text-blue-600 font-medium"
+            >
+              Tickets
+            </Link>
+            {role === "admin" && (
+              <>
+                <Link
+                  href="/reports"
+                  onClick={() => setMenuOpen(false)}
+                  className="text-slate-700 hover:text-blue-600 font-medium"
+                >
+                  Reports
+                </Link>
+                <Link
+                  href="/admin"
+                  onClick={() => setMenuOpen(false)}
+                  className="text-slate-700 hover:text-blue-600 font-medium"
+                >
+                  Admin
+                </Link>
+              </>
+            )}
+            {(role === "employee" || role === "developer") && (
+              <Button
+                onClick={() => {
+                  setShowForm(true);
+                  setMenuOpen(false);
+                }}
+              >
+                Raise Ticket
+              </Button>
+            )}
+            {user ? (
+              <>
+                <Link
+                  href="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="text-slate-700 hover:text-blue-600 font-medium"
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                  }}
+                  className="text-red-600 font-medium"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="text-slate-700 font-medium hover:text-blue-600"
+              >
+                Login
+              </Link>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Ticket Modal */}
       <AnimatePresence>
         {showForm && (
           <motion.div

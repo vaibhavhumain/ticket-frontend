@@ -20,67 +20,49 @@ export default function UsersPage() {
     }
   };
 
-  const updateRole = async (id, newRole) => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${id}/role`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ role: newRole }),
-      });
-
-      if (!res.ok) throw new Error("Failed to update role");
-
-      await fetchUsers(); // refresh list
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  if (loading) return <p>Loading users...</p>;
+  if (loading) return <p className="p-4 text-gray-600">Loading users...</p>;
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">Manage Users</h1>
-      <table className="w-full border">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="p-2 border">Name</th>
-            <th className="p-2 border">Email</th>
-            <th className="p-2 border">Role</th>
-            <th className="p-2 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u._id} className="border">
-              <td className="p-2 border">{u.name}</td>
-              <td className="p-2 border">{u.email}</td>
-              <td className="p-2 border">{u.role}</td>
-              <td className="p-2 border space-x-2">
-                {["employee", "developer", "admin"].map((role) => (
-                  <button
-                    key={role}
-                    onClick={() => updateRole(u._id, role)}
-                    className={`px-2 py-1 rounded ${
-                      u.role === role ? "bg-gray-400 text-white" : "bg-blue-500 text-white"
-                    }`}
-                  >
-                    {role}
-                  </button>
-                ))}
-              </td>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Manage Users</h1>
+
+      <div className="overflow-x-auto rounded-lg shadow">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-900 text-white text-left">
+              <th className="p-3">Name</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Role</th>
+              <th className="p-3 text-center">Tickets Raised</th>
+              <th className="p-3 text-center">Tickets Resolved</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map((u, idx) => (
+              <tr
+                key={u._id}
+                className={`border-b ${
+                  idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+                } hover:bg-gray-100 transition`}
+              >
+                <td className="p-3 font-medium text-gray-800">{u.name}</td>
+                <td className="p-3 text-gray-600">{u.email}</td>
+                <td className="p-3 text-gray-700 capitalize">{u.role}</td>
+                <td className="p-3 text-center font-semibold text-blue-600">
+                  {u.ticketsRaised || 0}
+                </td>
+                <td className="p-3 text-center font-semibold text-green-600">
+                  {u.ticketsResolved || 0}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

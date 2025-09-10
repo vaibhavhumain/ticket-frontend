@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import io from "socket.io-client";
-
+import Navbar from "@/components/Navbar";
+import NotificationCenter from "./NotificationCenter";
 let socket;
 
 export default function TicketList() {
@@ -38,33 +40,22 @@ export default function TicketList() {
       console.log("🟢 Connected to socket:", socket.id);
     });
 
-    // When new ticket created
     socket.on("ticketCreated", (newTicket) => {
       setTickets((prev) => {
-        // If raised by me
         if (newTicket.createdBy?._id === getUserId()) {
-          return {
-            ...prev,
-            raisedByMe: [newTicket, ...prev.raisedByMe],
-          };
+          return { ...prev, raisedByMe: [newTicket, ...prev.raisedByMe] };
         }
-        // If assigned to me
         if (newTicket.assignedTo?._id === getUserId()) {
-          return {
-            ...prev,
-            assignedToMe: [newTicket, ...prev.assignedToMe],
-          };
+          return { ...prev, assignedToMe: [newTicket, ...prev.assignedToMe] };
         }
         return prev;
       });
     });
 
-    // When ticket updated
     socket.on("ticketUpdated", (updatedTicket) => {
       setTickets((prev) => {
         const updateList = (list) =>
           list.map((t) => (t._id === updatedTicket._id ? updatedTicket : t));
-
         return {
           raisedByMe: updateList(prev.raisedByMe),
           assignedToMe: updateList(prev.assignedToMe),
@@ -72,7 +63,6 @@ export default function TicketList() {
       });
     });
 
-    // When ticket deleted
     socket.on("ticketDeleted", ({ id }) => {
       setTickets((prev) => ({
         raisedByMe: prev.raisedByMe.filter((t) => t._id !== id),
@@ -87,56 +77,43 @@ export default function TicketList() {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-40">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-        <span className="ml-2 text-blue-600">Loading tickets...</span>
+      <div>
+        <Navbar hideTickets />
+        <div className="flex justify-center items-center h-40">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+          <span className="ml-2 text-blue-600">Loading tickets...</span>
+        </div>
       </div>
     );
+    
 
-  if (error) return <p className="text-red-500">{error}</p>;
+  if (error)
+    return (
+      <div>
+        <Navbar hideTickets />
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
 
   const { raisedByMe = [], assignedToMe = [] } = tickets;
 
   if (raisedByMe.length === 0 && assignedToMe.length === 0)
     return (
-      <div className="text-center text-gray-500 p-6 border rounded bg-white shadow">
-        No tickets found.
+      <div>
+        <Navbar hideTickets />
+        <div className="text-center text-gray-500 p-6 border rounded bg-white shadow">
+          No tickets found.
+        </div>
       </div>
     );
 
   return (
-    <div className="space-y-8">
-      {/* Raised by me */}
-      <section>
-        <h2 className="text-lg font-bold text-slate-800 mb-3">
-          📌 Tickets Raised By Me
-        </h2>
-        {raisedByMe.length === 0 ? (
-          <p className="text-sm text-gray-500">No tickets raised.</p>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {raisedByMe.map((t) => (
-              <TicketCard key={t._id} ticket={t} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Assigned to me */}
-      <section>
-        <h2 className="text-lg font-bold text-slate-800 mb-3">
-          📝 Tickets Assigned To Me
-        </h2>
-        {assignedToMe.length === 0 ? (
-          <p className="text-sm text-gray-500">No tickets assigned.</p>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {assignedToMe.map((t) => (
-              <TicketCard key={t._id} ticket={t} />
-            ))}
-          </div>
-        )}
-      </section>
+    <div>
+      <Navbar hideTickets />
+      <div className="p-6 space-y-8">
+        <TicketSection title="📌 Tickets Raised By Me" list={raisedByMe} />
+        <TicketSection title="📝 Tickets Assigned To Me" list={assignedToMe} />
+      </div>
     </div>
   );
 }
@@ -150,9 +127,31 @@ function getUserId() {
   return null;
 }
 
-function TicketCard({ ticket: t }) {
+function TicketSection({ title, list }) {
   return (
-    <div className="p-5 border rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+    <section>
+      <h2 className="text-lg font-bold text-slate-800 mb-3">{title}</h2>
+      {list.length === 0 ? (
+        <p className="text-sm text-gray-500">No tickets here.</p>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {list.map((t) => (
+            <TicketCard key={t._id} ticket={t} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TicketCard({ ticket: t }) {
+  const router = useRouter();
+
+  return (
+    <div
+      onClick={() => router.push(`/tickets/${t._id}`)} // 👈 redirect to detail
+      className="p-5 border rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+    >
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-bold text-lg text-slate-800 truncate">{t.title}</h3>
@@ -170,7 +169,9 @@ function TicketCard({ ticket: t }) {
       </div>
 
       {/* Description */}
-      <p className="text-slate-600 text-sm line-clamp-3 mb-3">{t.description}</p>
+      <p className="text-slate-600 text-sm line-clamp-3 mb-3">
+        {t.description}
+      </p>
 
       {/* Footer */}
       <div className="flex justify-between items-center text-xs text-gray-500">
