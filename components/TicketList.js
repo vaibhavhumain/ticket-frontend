@@ -7,13 +7,15 @@ import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import io from "socket.io-client";
 import Navbar from "@/components/Navbar";
-import NotificationCenter from "./NotificationCenter";
+
 let socket;
 
 export default function TicketList() {
   const [tickets, setTickets] = useState({ raisedByMe: [], assignedToMe: [] });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // Fetch tickets initially
   useEffect(() => {
@@ -85,7 +87,6 @@ export default function TicketList() {
         </div>
       </div>
     );
-    
 
   if (error)
     return (
@@ -97,22 +98,58 @@ export default function TicketList() {
 
   const { raisedByMe = [], assignedToMe = [] } = tickets;
 
-  if (raisedByMe.length === 0 && assignedToMe.length === 0)
-    return (
-      <div>
-        <Navbar hideTickets />
-        <div className="text-center text-gray-500 p-6 border rounded bg-white shadow">
-          No tickets found.
-        </div>
-      </div>
-    );
+  // ✅ Filter tickets
+  const applyFilters = (list) =>
+    list.filter((t) => {
+      const priorityMatch =
+        priorityFilter === "all" || t.priority === priorityFilter;
+      const statusMatch = statusFilter === "all" || t.status === statusFilter;
+      return priorityMatch && statusMatch;
+    });
 
   return (
     <div>
       <Navbar hideTickets />
+
+      {/* Filter Bar */}
+      <div className="p-6 flex flex-wrap gap-4 items-center">
+        <div>
+          <label className="text-sm font-medium text-gray-700 mr-2">
+            Priority:
+          </label>
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className="border rounded px-3 py-1 text-sm"
+          >
+            <option value="all">All</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-gray-700 mr-2">
+            Status:
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border rounded px-3 py-1 text-sm"
+          >
+            <option value="all">All</option>
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+      </div>
+
       <div className="p-6 space-y-8">
-        <TicketSection title="📌 Tickets Raised By Me" list={raisedByMe} />
-        <TicketSection title="📝 Tickets Assigned To Me" list={assignedToMe} />
+        <TicketSection title="📌 Tickets Raised By Me" list={applyFilters(raisedByMe)} />
+        <TicketSection title="📝 Tickets Assigned To Me" list={applyFilters(assignedToMe)} />
       </div>
     </div>
   );
@@ -149,7 +186,7 @@ function TicketCard({ ticket: t }) {
 
   return (
     <div
-      onClick={() => router.push(`/tickets/${t._id}`)} // 👈 redirect to detail
+      onClick={() => router.push(`/tickets/${t._id}`)}
       className="p-5 border rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
     >
       {/* Header */}

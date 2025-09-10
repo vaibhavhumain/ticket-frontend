@@ -12,7 +12,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("employee");
+  const [role, setRole] = useState("IT");
   const [error, setError] = useState("");
 
   const handleRegister = async (e) => {
@@ -84,15 +84,20 @@ export default function RegisterPage() {
               />
             </div>
             <div className="flex flex-col space-y-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role">Department</Label>
               <select
                 id="role"
                 className="border rounded px-3 py-2"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               >
-                <option value="employee">Employee</option>
-                <option value="developer">Developer</option>
+                <option value="HR">HR</option>
+                <option value="IT">IT</option>
+                <option value="Sales">Sales</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Production">Production</option>
+                <option value="Purchase">Purchase</option>
+                <option value="Accounts">Accounts</option>
                 <option value="admin">Admin</option>
               </select>
             </div>

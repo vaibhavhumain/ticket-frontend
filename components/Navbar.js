@@ -66,7 +66,7 @@ export default function Navbar() {
               </Link>
             </>
           )}
-          {(role === "employee" || role === "developer") && (
+          {(role !== "admin") && (
             <Button onClick={() => setShowForm(true)}>Raise Ticket</Button>
           )}
         </div>
@@ -150,7 +150,7 @@ export default function Navbar() {
                 </Link>
               </>
             )}
-            {(role === "employee" || role === "developer") && (
+            {(role !== "admin") && (
               <Button
                 onClick={() => {
                   setShowForm(true);
