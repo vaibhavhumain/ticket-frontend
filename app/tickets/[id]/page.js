@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
-import { Badge } from "@/components/ui/badge"; // if you added shadcn badge
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 export default function TicketDetailPage() {
@@ -12,12 +14,15 @@ export default function TicketDetailPage() {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [newComment, setNewComment] = useState("");
+  const [newStatus, setNewStatus] = useState("");
 
   useEffect(() => {
     async function fetchTicket() {
       try {
         const data = await apiRequest(`/tickets/${id}`, "GET");
         setTicket(data);
+        setNewStatus(data.status);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -26,6 +31,20 @@ export default function TicketDetailPage() {
     }
     if (id) fetchTicket();
   }, [id]);
+
+  async function handleAddComment() {
+    if (!newComment && !newStatus) return;
+    try {
+      const updated = await apiRequest(`/tickets/${id}/comments`, "POST", {
+        text: newComment,
+        status: newStatus,
+      });
+      setTicket(updated);
+      setNewComment("");
+    } catch (err) {
+      alert(err.message);
+    }
+  }
 
   if (loading)
     return (
@@ -40,8 +59,8 @@ export default function TicketDetailPage() {
   if (!ticket) return <p className="p-6">No ticket found.</p>;
 
   return (
-    <main className="p-6 max-w-2xl mx-auto">
-      {/* Header with back button */}
+    <main className="p-6 max-w-2xl mx-auto space-y-6">
+      {/* Header */}
       <div className="flex items-center mb-6">
         <button
           onClick={() => router.back()}
@@ -51,7 +70,7 @@ export default function TicketDetailPage() {
         </button>
       </div>
 
-      {/* Ticket card */}
+      {/* Ticket Info */}
       <div className="border rounded-xl bg-white shadow-md p-6 space-y-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-slate-800">{ticket.title}</h1>
@@ -73,17 +92,7 @@ export default function TicketDetailPage() {
         <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
           <p>
             <span className="font-semibold">Status:</span>{" "}
-            <span
-              className={`${
-                ticket.status === "open"
-                  ? "text-green-600 font-medium"
-                  : ticket.status === "closed"
-                  ? "text-red-600 font-medium"
-                  : "text-yellow-600 font-medium"
-              }`}
-            >
-              {ticket.status}
-            </span>
+            <span className="capitalize">{ticket.status}</span>
           </p>
           <p>
             <span className="font-semibold">Category:</span> {ticket.category}
@@ -94,22 +103,70 @@ export default function TicketDetailPage() {
           </p>
           <p>
             <span className="font-semibold">Assigned to:</span>{" "}
-            {ticket.assignedTo?.name || ticket.assignedTo?.email || "Unassigned"}
+            {ticket.assignedTo?.name ||
+              ticket.assignedTo?.email ||
+              "Unassigned"}
           </p>
         </div>
+      </div>
 
-        <div className="text-xs text-gray-500">
-          Created:{" "}
-          {ticket.createdAt
-            ? new Date(ticket.createdAt).toLocaleString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "N/A"}
+      {/* Update Ticket */}
+      <div className="border rounded-xl bg-white shadow-md p-6 space-y-4 overflow-visible">
+        <h2 className="font-semibold text-lg">Update Ticket</h2>
+
+        {/* Status Dropdown */}
+        <div className="space-y-2 mb-8 relative z-50">
+          <label className="text-sm font-medium text-gray-700">
+            Change Status
+          </label>
+          <select value={newStatus} onValueChange={(e) => setNewStatus(e.target.value)} className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+              <option value="open">Open</option>
+              <option value="in-progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+          </select>
         </div>
+
+        {/* Comment Box */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">
+            Optional Comment
+          </label>
+          <Textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Add details about this update..."
+            className="resize-none min-h-[80px]"
+          />
+        </div>
+
+        {/* Save Button */}
+        <Button onClick={handleAddComment} className="w-full">
+          Save Update
+        </Button>
+      </div>
+
+      {/* Comments */}
+      <div className="border rounded-xl bg-white shadow-md p-6 space-y-4">
+        <h2 className="font-semibold text-lg">Comments</h2>
+        {ticket.comments?.length > 0 ? (
+          <ul className="space-y-3">
+            {ticket.comments.map((c, i) => (
+              <li
+                key={i}
+                className="border rounded-md bg-gray-50 p-3 text-sm space-y-1"
+              >
+                <p className="text-gray-800">{c.text}</p>
+                <span className="block text-xs text-gray-500">
+                  by {c.addedBy?.name || c.addedBy?.email || "User"} on{" "}
+                  {new Date(c.createdAt).toLocaleString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500 text-sm">No comments yet.</p>
+        )}
       </div>
     </main>
   );
