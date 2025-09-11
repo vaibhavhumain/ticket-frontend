@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/api";
 import { toast } from "sonner";
 import { useNotificationStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
+import { Loader2, Tag, FileText, AlertTriangle, UserPlus } from "lucide-react";
 
 export default function TicketForm({ onCreated }) {
   const router = useRouter();
@@ -21,9 +22,10 @@ export default function TicketForm({ onCreated }) {
 
   const fetchNotifications = useNotificationStore((s) => s.fetchNotifications);
 
-  const currentUser = typeof window !== "undefined"
-    ? JSON.parse(localStorage.getItem("user") || "{}")
-    : {};
+  const currentUser =
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("user") || "{}")
+      : {};
 
   useEffect(() => {
     async function fetchUsers() {
@@ -80,28 +82,34 @@ export default function TicketForm({ onCreated }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 bg-white p-6 rounded-xl shadow-md border border-slate-200 max-w-lg mx-auto"
+      className="space-y-6 bg-gradient-to-b from-white to-slate-50 p-8 rounded-2xl shadow-lg border border-slate-200 max-w-lg mx-auto"
     >
       <h2 className="font-bold text-2xl text-slate-800 text-center">
-        Raise a Ticket
+        Raise a New Ticket
       </h2>
+      <p className="text-sm text-slate-500 text-center -mt-2">
+        Fill in the details below to submit your issue.
+      </p>
 
       {error && (
-        <p className="text-red-500 text-sm bg-red-50 border border-red-200 p-2 rounded">
+        <p className="text-red-600 text-sm bg-red-50 border border-red-200 p-3 rounded-lg">
           {error}
         </p>
       )}
 
       {/* Title */}
       <div className="flex flex-col space-y-1">
-        <label htmlFor="title" className="text-sm font-medium text-slate-700">
-          Title
+        <label
+          htmlFor="title"
+          className="text-sm font-medium text-slate-700 flex items-center gap-1.5"
+        >
+          <Tag className="h-4 w-4 text-slate-500" /> Title
         </label>
         <input
           id="title"
           name="title"
           placeholder="Enter ticket title"
-          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+          className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm hover:border-slate-400 transition"
           value={form.title}
           onChange={handleChange}
           required
@@ -110,14 +118,17 @@ export default function TicketForm({ onCreated }) {
 
       {/* Description */}
       <div className="flex flex-col space-y-1">
-        <label htmlFor="description" className="text-sm font-medium text-slate-700">
-          Description
+        <label
+          htmlFor="description"
+          className="text-sm font-medium text-slate-700 flex items-center gap-1.5"
+        >
+          <FileText className="h-4 w-4 text-slate-500" /> Description
         </label>
         <textarea
           id="description"
           name="description"
           placeholder="Describe the issue"
-          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm h-24 resize-none"
+          className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm h-28 resize-none hover:border-slate-400 transition"
           value={form.description}
           onChange={handleChange}
           required
@@ -126,15 +137,18 @@ export default function TicketForm({ onCreated }) {
 
       {/* Priority */}
       <div className="flex flex-col space-y-1">
-        <label htmlFor="priority" className="text-sm font-medium text-slate-700">
-          Priority
+        <label
+          htmlFor="priority"
+          className="text-sm font-medium text-slate-700 flex items-center gap-1.5"
+        >
+          <AlertTriangle className="h-4 w-4 text-slate-500" /> Priority
         </label>
         <select
           id="priority"
           name="priority"
           value={form.priority}
           onChange={handleChange}
-          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+          className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm hover:border-slate-400 transition"
         >
           <option value="low">Low</option>
           <option value="medium">Medium</option>
@@ -144,15 +158,18 @@ export default function TicketForm({ onCreated }) {
 
       {/* Assigned To */}
       <div className="flex flex-col space-y-1">
-        <label htmlFor="assignedTo" className="text-sm font-medium text-slate-700">
-          Assign To
+        <label
+          htmlFor="assignedTo"
+          className="text-sm font-medium text-slate-700 flex items-center gap-1.5"
+        >
+          <UserPlus className="h-4 w-4 text-slate-500" /> Assign To
         </label>
         <select
           id="assignedTo"
           name="assignedTo"
           value={form.assignedTo}
           onChange={handleChange}
-          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+          className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm hover:border-slate-400 transition"
         >
           <option value="">-- Select a User --</option>
           {users.map((user) => (
@@ -167,11 +184,15 @@ export default function TicketForm({ onCreated }) {
       <button
         type="submit"
         disabled={loading}
-        className={`w-full py-2.5 rounded-lg font-medium text-white transition ${
-          loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-        }`}
+        className="w-full py-2.5 rounded-lg font-medium text-white flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {loading ? "Submitting..." : "Submit Ticket"}
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" /> Submitting...
+          </>
+        ) : (
+          "Submit Ticket"
+        )}
       </button>
     </form>
   );

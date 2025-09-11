@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Bell, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotificationStore } from "@/lib/store/useNotificationStore";
 import { io } from "socket.io-client";
@@ -24,7 +24,7 @@ export default function NotificationCenter() {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
 
-    if (!storedUser || !token) return; // not logged in → skip
+    if (!storedUser || !token) return;
 
     fetchNotifications();
 
@@ -73,12 +73,19 @@ export default function NotificationCenter() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-96 bg-white shadow-2xl rounded-lg overflow-hidden"
+            className="absolute right-0 mt-2 w-96 bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl rounded-xl overflow-hidden"
           >
-            <div className="p-4 border-b font-semibold text-slate-700">
-              Notifications
+            {/* Header */}
+            <div className="sticky top-0 bg-white/95 border-b px-4 py-3 font-semibold text-slate-700 flex justify-between items-center">
+              <span>Notifications</span>
+              {unreadCount > 0 && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                  {unreadCount} new
+                </span>
+              )}
             </div>
 
+            {/* List */}
             <div className="max-h-96 overflow-y-auto divide-y">
               {notifications.length === 0 && (
                 <p className="text-sm text-center text-slate-500 py-6">
@@ -100,21 +107,28 @@ export default function NotificationCenter() {
                         setOpen(false);
                       }
                     }}
-                    className={`p-3 cursor-pointer transition ${
+                    className={`px-4 py-3 cursor-pointer transition flex flex-col ${
                       n.read
-                        ? "bg-white hover:bg-slate-100 text-slate-600"
+                        ? "bg-white hover:bg-slate-50"
                         : "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
                     }`}
                   >
-                    <p
-                      className={`text-sm ${
-                        n.read ? "font-normal" : "font-semibold text-slate-800"
-                      }`}
-                    >
-                      {n.title}
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <p
+                        className={`text-sm ${
+                          n.read
+                            ? "font-normal text-slate-700"
+                            : "font-semibold text-slate-900"
+                        }`}
+                      >
+                        {n.title}
+                      </p>
+                      {n.read && (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 ml-2" />
+                      )}
+                    </div>
                     {typeof n.ticket === "object" && (
-                      <p className="text-xs text-slate-500 truncate">
+                      <p className="text-xs text-slate-500 truncate mt-1">
                         {n.ticket.title}
                       </p>
                     )}

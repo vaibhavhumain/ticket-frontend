@@ -4,17 +4,18 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import TicketForm from "@/components/TicketForm"; 
+import TicketForm from "@/components/TicketForm";
 import { useNotificationStore } from "@/lib/store/useNotificationStore";
 import NotificationCenter from "@/components/NotificationCenter";
 import Navbar from "@/components/Navbar";
+import { PlusCircle, FileText, LogOut } from "lucide-react";
 
 const { reset } = useNotificationStore.getState();
 
 export default function MainPage() {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
-  const [showForm, setShowForm] = useState(false); 
+  const [showForm, setShowForm] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -39,17 +40,17 @@ export default function MainPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300">
+    <div className="min-h-screen bg-slate-100">
       {/* Navbar always on top */}
       <Navbar />
 
-      {/* Notification Center – only for this page */}
-      <div className="absolute top-20 right-6">
+      {/* Notification Center */}
+      <div className="absolute top-20 right-6 z-40">
         <NotificationCenter />
       </div>
 
       {/* Centered content */}
-      <main className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+      <main className="flex items-center justify-center min-h-[calc(100vh-64px)] p-6">
         <AnimatePresence>
           {!loggingOut ? (
             <motion.div
@@ -58,17 +59,20 @@ export default function MainPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
-              className="backdrop-blur-md bg-white/70 border border-slate-200 shadow-2xl rounded-2xl p-10 w-[420px] space-y-8 relative overflow-hidden"
+              className="bg-white border border-slate-200 shadow-lg rounded-xl p-10 w-[420px] space-y-8 text-center"
             >
               {/* Header */}
-              <div className="text-center space-y-2">
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-slate-800">
+                  Ticket Dashboard
+                </h1>
                 <p className="text-slate-600">
                   Manage, Track & Resolve Queries Easily
                 </p>
                 {user && (
-                  <p className="mt-2 text-slate-700 font-medium">
+                  <p className="mt-2 text-slate-700 text-sm">
                     👋 Welcome,{" "}
-                    <span className="font-bold">
+                    <span className="font-semibold">
                       {user.name || user.email}
                     </span>
                   </p>
@@ -77,26 +81,29 @@ export default function MainPage() {
 
               {/* Options */}
               <div className="flex flex-col space-y-4">
-                <Button className="w-full" onClick={() => setShowForm(true)}>
-                  ➕ Raise a Ticket
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={() => setShowForm(true)}
+                >
+                  <PlusCircle className="mr-2 h-5 w-5" /> Raise a Ticket
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="w-full border-slate-300 text-slate-700 hover:bg-slate-100"
                   onClick={() => router.push("/tickets")}
                 >
-                  📋 View My Tickets
+                  <FileText className="mr-2 h-5 w-5" /> View My Tickets
                 </Button>
               </div>
 
               {/* Logout */}
-              <div className="pt-4">
+              <div className="pt-2">
                 <Button
                   variant="destructive"
-                  className="w-full"
+                  className="w-full bg-red-500 hover:bg-red-600"
                   onClick={handleLogout}
                 >
-                  🚪 Logout
+                  <LogOut className="mr-2 h-5 w-5" /> Logout
                 </Button>
               </div>
             </motion.div>
@@ -123,19 +130,25 @@ export default function MainPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="bg-white rounded-lg shadow-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto"
             >
-              <h2 className="text-xl font-bold mb-4">Raise a New Ticket</h2>
+              <h2 className="text-xl font-bold mb-4 text-slate-800">
+                Raise a New Ticket
+              </h2>
               <TicketForm onCreated={() => setShowForm(false)} />
-              <div className="mt-4 text-right">
-                <Button variant="outline" onClick={() => setShowForm(false)}>
+              <div className="mt-6 text-right">
+                <Button
+                  variant="outline"
+                  className="hover:bg-slate-100"
+                  onClick={() => setShowForm(false)}
+                >
                   Cancel
                 </Button>
               </div>

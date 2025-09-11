@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import TicketForm from "@/components/TicketForm";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X, User } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
@@ -29,24 +30,26 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="w-full bg-white shadow-md flex items-center justify-between px-6 py-3 sticky top-0 z-50">
+      <nav className="w-full bg-slate-50 border-b border-slate-200 flex items-center justify-between px-6 py-3 sticky top-0 z-50">
         {/* Left: Logo */}
         <Link href="/dashboard" className="flex items-center space-x-2">
-          <span className="text-pink-600 text-2xl">🎟️</span>
-          <span className="text-lg font-bold text-slate-800">Ticket System</span>
+          <span className="text-blue-600 text-2xl">🎟️</span>
+          <span className="text-lg font-bold text-slate-800">
+            Ticket System
+          </span>
         </Link>
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center space-x-6">
           <Link
             href="/dashboard"
-            className="text-slate-700 hover:text-blue-600 font-medium"
+            className="text-slate-700 hover:text-blue-600 hover:underline underline-offset-4 font-medium"
           >
             Dashboard
           </Link>
           <Link
             href="/tickets"
-            className="text-slate-700 hover:text-blue-600 font-medium"
+            className="text-slate-700 hover:text-blue-600 hover:underline underline-offset-4 font-medium"
           >
             Tickets
           </Link>
@@ -54,20 +57,26 @@ export default function Navbar() {
             <>
               <Link
                 href="/reports"
-                className="text-slate-700 hover:text-blue-600 font-medium"
+                className="text-slate-700 hover:text-blue-600 hover:underline underline-offset-4 font-medium"
               >
                 Reports
               </Link>
               <Link
                 href="/admin"
-                className="text-slate-700 hover:text-blue-600 font-medium"
+                className="text-slate-700 hover:text-blue-600 hover:underline underline-offset-4 font-medium"
               >
                 Admin
               </Link>
             </>
           )}
-          {(role !== "admin") && (
-            <Button onClick={() => setShowForm(true)}>Raise Ticket</Button>
+          {role !== "admin" && (
+            <Button
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => setShowForm(true)}
+            >
+              ➕ Raise Ticket
+            </Button>
           )}
         </div>
 
@@ -77,46 +86,63 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 font-medium hover:bg-slate-200"
+                className="px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 font-medium hover:bg-slate-200 flex items-center gap-2"
               >
+                <User className="h-4 w-4 text-slate-500" />
                 {user.name?.split(" ")[0] || user.email}
               </button>
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg w-40">
-                  <Link
-                    href="/profile"
-                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              <AnimatePresence>
+                {dropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg w-44 overflow-hidden"
                   >
-                    Profile
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-slate-100"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-slate-100"
+                    >
+                      Logout
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : (
             <Link
               href="/login"
-              className="text-slate-700 font-medium hover:text-blue-600"
+              className="text-slate-700 font-medium hover:text-blue-600 hover:underline underline-offset-4"
             >
               Login
             </Link>
           )}
         </div>
+
+        {/* Mobile Toggle */}
+        <button
+          className="md:hidden text-slate-700"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </nav>
 
       {/* Mobile Menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ y: -20, opacity: 0 }}
+            initial={{ y: -15, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -20, opacity: 0 }}
-            className="md:hidden bg-white shadow-md flex flex-col px-6 py-4 space-y-3"
+            exit={{ y: -15, opacity: 0 }}
+            className="md:hidden bg-white border-b border-slate-200 flex flex-col px-6 py-4 space-y-3"
           >
             <Link
               href="/dashboard"
@@ -150,14 +176,15 @@ export default function Navbar() {
                 </Link>
               </>
             )}
-            {(role !== "admin") && (
+            {role !== "admin" && (
               <Button
+                size="sm"
                 onClick={() => {
                   setShowForm(true);
                   setMenuOpen(false);
                 }}
               >
-                Raise Ticket
+                ➕ Raise Ticket
               </Button>
             )}
             {user ? (
@@ -203,16 +230,22 @@ export default function Navbar() {
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="bg-white rounded-lg shadow-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-xl shadow-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto"
             >
-              <h2 className="text-xl font-bold mb-4">Raise a New Ticket</h2>
+              <h2 className="text-xl font-semibold mb-4 text-slate-800">
+                Raise a New Ticket
+              </h2>
               <TicketForm onCreated={() => setShowForm(false)} />
-              <div className="mt-4 text-right">
-                <Button variant="outline" onClick={() => setShowForm(false)}>
+              <div className="mt-6 text-right">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowForm(false)}
+                  className="hover:bg-slate-100"
+                >
                   Cancel
                 </Button>
               </div>
